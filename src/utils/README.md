@@ -11,8 +11,10 @@ Avoid duplicating low-level operations — rounding, literal parsing, file exist
 Helpers are grouped by **technical concern**, with one file per concern:
 
 - [number.ts](number.ts) — numeric helpers (`round2` for money-style 2-decimal rounding)
+- [date.ts](date.ts) — date/time helpers (`parseHour` to extract the hour from a `HH:MM` string)
 - [parse.ts](parse.ts) — string-to-value parsers at the I/O boundary (`parseEnum` for runtime-validated literal narrowing, `parseBool` with explicit fallback)
 - [csv.ts](csv.ts) — CSV-related helpers (`csvFileExists` for checking a known CSV file by key)
+- [object.ts](object.ts) — object helpers (`typedKeys` to recover the branded key type that `Object.keys` loses to `string[]`)
 
 ### Why this layout
 
