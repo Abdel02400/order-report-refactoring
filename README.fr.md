@@ -241,20 +241,58 @@ Flux de données :
 - **Problème** : `console.log` et `fs.writeFileSync` vivent au milieu de la boucle de calcul.
 - **Solution** : les calculs retournent des DTOs, un seul `writeOutput(text, json)` à la fin exécute les effets de bord. `buildReport()` lui-même n'a aucun effet de bord et peut être appelé depuis un test, un worker ou une API.
 
-## Dette technique identifiée
+## Limites et améliorations futures
 
-Le refacto préserve la sortie du legacy caractère par caractère, bugs inclus. Problèmes connus à traiter dans une itération ultérieure :
+### Ce qui n'a pas été fait (par manque de temps)
 
-1. **Bugs CRLF de parsing sur Windows** — `taxable` est toujours false, le taux de change toujours 1.0, la valeur de devise porte un `\r` final. Une vraie librairie CSV (ou `split(/\r?\n/)`) corrige les trois. Correction reportée car elle divergerait de la sortie legacy actuelle.
+- [ ] **Helpers de parsing numérique strict** (`parseIntStrict` / `parseFloatStrict`) — aujourd'hui `parseInt('AAA')` retourne `NaN` et contamine chaque somme en aval silencieusement, exactement comme le legacy. Des helpers qui throw avec le nom du champ fautif viendraient remplacer ça.
+- [ ] **Tests unitaires sur la couche orchestration** — `aggregateOrders`, `resolveCustomer`, `buildCustomerReport`, `buildReport`, `writeOutput` sont couverts transitivement par le Golden Master mais n'ont pas de tests dédiés. Risque faible parce que les fonctions composées ont déjà leurs tests, mais utile pour isoler plus finement les régressions.
+- [ ] **Validation runtime dans les factories d'IDs brandés** — `toCustomerId`, `toProductId`, etc. ne font qu'un cast pour le moment. Elles sont l'endroit naturel pour brancher des checks de format / longueur / existence ; reporté pour garder l'iso-comportement.
+- [ ] **Tests unitaires des parsers sur fixtures en mémoire** — les parsers ne sont testés end-to-end que via le Golden Master. Mocker `fs.readFileSync` avec des strings de fixture isolerait les edge cases de parsing des vraies données.
+- [ ] **Sortie d'erreur structurée pour les échecs CLI** — `run()` laisse actuellement les exceptions remonter au handler par défaut du terminal. Un `try/catch` top-level dans `main.ts` qui affiche un message user-friendly et exit avec un code non-zero serait plus propre.
 
-2. **Parsing numérique silencieux** — `parseInt('AAA')` retourne `NaN` et contamine silencieusement chaque somme en aval. À remplacer par des helpers `parseIntStrict` / `parseFloatStrict` qui throw avec le nom du champ fautif.
+### Compromis assumés
 
-3. **Taux de change codés en dur** — `CURRENCY_RATES` est une table statique. Un vrai système devrait récupérer les taux via une API ou une config, avec un historique par jour. Le wrapper `getCurrencyRate` est intentionnellement conservé pour que les call sites n'aient pas à changer quand le backing store évolue.
+- **Bugs CRLF du legacy reproduits volontairement** — sur Windows, le legacy a trois bugs silencieux causés par `split('\n')` qui laisse un `\r` final sur la dernière colonne de chaque CSV :
+    - `taxable === 'true'` est toujours false → la taxe est toujours à zéro.
+    - `currency === 'USD'` est toujours false → le taux de conversion reste à 1.0 pour USD / GBP.
+    - La valeur de devise polluée est affichée telle quelle, le `\r` final étant absorbé par le séparateur de ligne.
 
-4. **Promotion FIXED appliquée par ligne** — le legacy multiplie une promotion forfaitaire par la quantité de la commande, ce qui n'est presque certainement pas l'intention.
+    Justification : le Golden Master doit matcher caractère par caractère sur Windows. Corriger le parser ferait diverger la sortie refactorée de la référence capturée. Les bugs sont reproduits volontairement et listés ici pour qu'une itération future puisse les traiter en même temps qu'un golden mis à jour.
 
-5. **Réduction proportionnelle sur le plafond volume discount** — quand `volume + loyalty > MAX_DISCOUNT`, les deux sont mis à l'échelle proportionnellement. Règle métier inhabituelle ; à confirmer avec les stakeholders.
+- **Promotion FIXED appliquée par ligne** — le legacy multiplie une remise forfaitaire par `order.qty`, ce qui n'est presque certainement pas l'intention. Préservé pour matcher la sortie legacy.
 
-6. **Bonus weekend basé sur la date de la première commande** — seule la date du premier article pilote le multiplicateur, ce qui est surprenant pour un client qui commande sur plusieurs jours.
+- **Réduction proportionnelle du plafond de remise** — quand `volumeDiscount + loyaltyDiscount > MAX_DISCOUNT`, les deux sont réduits proportionnellement. Règle métier inhabituelle ; conservée telle quelle parce que la modifier changerait le breakdown affiché.
 
-7. **Grand Total labellisé en EUR quelle que soit la devise** — les totaux par client peuvent être en EUR, USD ou GBP mais la ligne `Grand Total` les mélange en affichant "EUR".
+- **Bonus weekend basé uniquement sur la date de la première commande** — les clients multi-jours gagnent toujours le multiplicateur basé sur leur première commande, ce qui est surprenant. Préservé.
+
+- **Grand Total labellisé en EUR toutes devises confondues** — les totaux par client sont déjà convertis dans leur devise cible, donc les sommer dans `Grand Total` et labelliser le résultat "EUR" mélange les unités. Préservé.
+
+- **Taux de change codés en dur** — `CURRENCY_RATES` est une table statique dans le code (EUR=1.0, USD=1.1, GBP=0.85). Les vrais taux varient intra-day et les taux historiques ne sont pas conservés, donc rejouer une commande passée avec la table actuelle en réécrit silencieusement la valeur. Un client qui paie dans une devise non listée (BRL, JPY, CHF…) tombe sur le taux 1.0 sans aucun warning. Préservé parce que le legacy se comporte pareil.
+
+- **Gestion des dates et heures sensible à la timezone** — `new Date('2025-01-15').getDay()` retourne le jour de la semaine dans la **timezone locale de la machine qui exécute le script**. Les mêmes données traitées sur un serveur à Tokyo (UTC+9) et à Paris (UTC+1) peuvent produire des bonus weekend différents près de minuit UTC. De même, `parseHour('09:15')` extrait une heure sans timezone attachée, donc la règle "bonus matinal avant 10:00" est ambiguë pour les clients d'autres régions. Préservé parce que le legacy a le même problème ; le fix consiste à choisir une timezone de référence explicite (UTC, locale du client ou locale du business) et à l'imposer partout.
+
+- **Aucune validation des dates CSV** — `new Date('pas-une-date')` retourne `Invalid Date`, `getDay()` retourne `NaN`, et `NaN === 0 || NaN === 6` vaut `false`, donc une mauvaise date skippe silencieusement le bonus weekend sans aucun warning. Une typo dans le CSV (par exemple `2025-13-45`) passe inaperçue.
+
+- **Montants monétaires stockés en `number` JavaScript (float64)** — chaque total, remise, taxe et frais de livraison s'accumule en floats IEEE-754. Le classique `0.1 + 0.2 !== 0.3` est latent partout : sur de gros batchs, les centimes peuvent dériver et le total affiché peut être à quelques centimes près de la somme de ses composants. Le fix est simple : quelques helpers qui convertissent vers des unités mineures entières (centimes) pour l'arithmétique, puis reconvertissent en décimal pour l'affichage — aucune dépendance externe nécessaire. Préservé pour matcher le legacy.
+
+- **Les clients sans commande sont invisibles** — le rapport boucle sur les clients *qui ont commandé*, donc un client présent dans `customers.csv` mais sans entrée dans `orders.csv` n'apparaît jamais dans la sortie. C'est le comportement legacy et c'est peut-être voulu, mais ça mérite d'être confirmé avec le business avant de considérer le rapport comme une liste exhaustive de clients.
+
+- **Split CSV naïf (sans escaping)** — notre `readCsv` découpe les lignes sur un `,` littéral. Une valeur contenant une virgule (`"Smith, John"`) ou un saut de ligne embarqué corromprait toutes les colonnes suivantes. Ça marche aujourd'hui parce que les données actuelles n'en contiennent pas, mais une simple édition d'un nom de client peut casser tout le pipeline. Le vrai fix, c'est une vraie librairie CSV.
+
+- **Encodage UTF-8 imposé en dur** — `fs.readFileSync(path, 'utf-8')` corrompt silencieusement tout CSV exporté dans un autre encodage (Latin-1, Windows-1252, exports Excel français avec accents…). Aucune détection de BOM, aucun encodage configurable, aucun warning quand une ligne contient des caractères de remplacement.
+
+- **Un seul `console.info(reportText)` pour le rapport texte** — garde le comportement legacy (le shell capture stdout). Un vrai CLI distinguerait stdout (payload) de stderr (logs).
+
+### Pistes d'amélioration future
+
+- Remplacer le lecteur CSV artisanal par une librairie standard (`csv-parse`) — le seul cas où les règles RFC 4180 (quoting, échappement, newlines embarqués) sont assez complexes pour qu'un parser fait main ne vaille pas le coup.
+- Alimenter `CURRENCY_RATES` depuis un provider externe (API, cache, snapshots quotidiens) avec une table historique pour que les commandes passées puissent être rejouées avec le taux de leur propre date. Le wrapper `getCurrencyRate` est déjà en place donc les call sites ne changeront pas.
+- Introduire une timezone business explicite (par exemple `Europe/Paris`) et dériver `getDay()` / `parseHour` depuis elle via le `Intl.DateTimeFormat` natif de Node — un helper de ~10 lignes (`new Intl.DateTimeFormat('en-US', { timeZone, weekday: 'short' })`) suffit, aucune lib de date nécessaire.
+- Introduire un petit helper monétaire (`toCents(value) = Math.round(value * 100)` / `fromCents(cents) = cents / 100`) et faire toutes les accumulations en centimes entiers pour tuer la dérive flottante. Pareil, aucune dépendance externe pour les opérations actuelles (addition, soustraction, multiplication par un entier).
+- Valider les strings de date CSV à l'étape de parsing (format + réalité), fallback ou throw sur date invalide au lieu de produire silencieusement `NaN`.
+- Étendre l'union `Currency` (ou la rendre dynamique depuis le rates provider) pour qu'un CSV contenant une devise non listée soit soit rejeté en amont soit géré proprement.
+- Extraire un `src/domain/` pour des policies métier plus riches si les règles dépassent le pur calcul (validation, workflows, règles d'éligibilité).
+- Migrer vers ESM une fois que le tooling (ts-node / Jest) est stable, pour remplacer `require.main === module` par une détection d'entrée plus propre.
+- Ajouter un flag `--dry-run` sur `pnpm start` pour ne pas écrire `output.json` (utile pour les checks CI et la preview).
+- Ajouter un seuil de couverture sur Jest (`--coverage --coverageThreshold=...`) une fois les tests orchestration en place.

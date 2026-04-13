@@ -241,20 +241,58 @@ Data flow:
 - **Problem**: `console.log` and `fs.writeFileSync` live in the middle of the calculation loop.
 - **Solution**: calculations return DTOs, a single `writeOutput(text, json)` at the end performs the side effects. `buildReport()` itself has no side effects and is callable from a test, a worker, or an API.
 
-## Technical debt identified
+## Limits and future improvements
 
-The refactor preserves the legacy output byte-for-byte, including bugs. Known issues to address in a later iteration:
+### What was not done (due to time constraints)
 
-1. **CRLF parsing bugs on Windows** — `taxable` is always false, currency rate always 1.0, currency value carries a trailing `\r`. A proper CSV library (or `split(/\r?\n/)`) fixes all three. Fix deferred because it would diverge from the current legacy output.
+- [ ] **Strict numeric parsing helpers** (`parseIntStrict` / `parseFloatStrict`) — today `parseInt('AAA')` returns `NaN` and contaminates every downstream sum silently, exactly like the legacy. Helpers that throw with the offending field name would replace this.
+- [ ] **Orchestration-layer unit tests** — `aggregateOrders`, `resolveCustomer`, `buildCustomerReport`, `buildReport`, `writeOutput` are covered transitively by the Golden Master but have no dedicated unit tests. Low risk because the composed functions already have unit tests, but worth adding for finer-grained regression isolation.
+- [ ] **Runtime validation inside branded-ID factories** — `toCustomerId`, `toProductId`, etc. currently only cast. They are the right place to add format / length / existence checks; deferred to keep iso-behavior.
+- [ ] **Parser unit tests against in-memory fixtures** — parsers are tested end-to-end via the Golden Master only. Mocking `fs.readFileSync` with fixture strings would isolate parsing edge cases from real data.
+- [ ] **Structured error output for CLI failures** — `run()` currently lets exceptions bubble to the terminal's default handler. A top-level `try/catch` in `main.ts` that prints a user-friendly message and exits with a non-zero code would be cleaner.
 
-2. **Silent numeric parsing** — `parseInt('AAA')` returns `NaN` and silently contaminates every downstream sum. Should be replaced by `parseIntStrict` / `parseFloatStrict` helpers that throw with the offending field name.
+### Accepted trade-offs
 
-3. **Hard-coded currency rates** — `CURRENCY_RATES` is a static table. A real system should fetch rates from an API or config with an audit trail per day. The `getCurrencyRate` wrapper is intentionally kept so call sites do not have to change when the backing store does.
+- **CRLF legacy bugs reproduced on purpose** — on Windows the legacy has three silent bugs caused by `split('\n')` leaving a trailing `\r` on the last CSV column:
+    - `taxable === 'true'` is always false → tax is always zero.
+    - `currency === 'USD'` is always false → conversion rate stays at 1.0 for USD / GBP.
+    - The polluted currency value is displayed verbatim, the trailing `\r` being absorbed by the line separator.
 
-4. **FIXED promotion applied per line** — the legacy multiplies a flat-amount promotion by the order quantity, which is almost certainly not the intent.
+    Justification: the Golden Master must match byte-for-byte on Windows. Fixing the parser would diverge the refactored output from the captured reference. The bugs are reproduced deliberately and listed here so a future iteration can address them together with an updated golden.
 
-5. **Volume-discount cap proportional reduction** — when `volume + loyalty > MAX_DISCOUNT`, both are scaled proportionally. Unusual business rule; worth confirming with stakeholders.
+- **FIXED promotion applied per line** — the legacy multiplies a flat-amount discount by `order.qty`, which is almost certainly not the intent. Preserved to match the legacy output.
 
-6. **Weekend bonus derived from the first order's date** — only the first item's date drives the multiplier, which is surprising for a customer who orders across multiple days.
+- **Proportional discount cap** — when `volumeDiscount + loyaltyDiscount > MAX_DISCOUNT`, both are scaled down proportionally. Unusual business rule; kept as-is because altering it would change the reported breakdown.
 
-7. **Grand Total labelled in EUR regardless of currency** — per-customer totals can be in EUR, USD, or GBP but the `Grand Total` line mixes them and still says "EUR".
+- **Weekend bonus derived from the first order's date only** — multi-day customers always get the multiplier based on their first order, which is surprising. Preserved.
+
+- **Grand Total labelled in EUR across currencies** — per-customer totals are already converted to their target currency, so summing them into `Grand Total` and labelling the result "EUR" mixes units. Preserved.
+
+- **Hard-coded currency rates** — `CURRENCY_RATES` is a static in-code table (EUR=1.0, USD=1.1, GBP=0.85). Real exchange rates change intra-day and historical rates are not tracked, so reprocessing a past order with today's table silently rewrites its value. A customer paying in a non-listed currency (BRL, JPY, CHF…) falls back to rate 1.0 without any warning. Preserved because the legacy behaves the same way.
+
+- **Timezone-sensitive date and hour handling** — `new Date('2025-01-15').getDay()` returns the day-of-week in the **local timezone of the machine that runs the script**. The same data processed on a server in Tokyo (UTC+9) and in Paris (UTC+1) can produce different weekend bonuses near midnight UTC. Likewise, `parseHour('09:15')` extracts an hour with no timezone attached, so the "morning bonus before 10:00" rule is ambiguous for customers in other regions. Preserved because the legacy has the same issue; the fix involves choosing an explicit reference timezone (UTC, customer-local, or business-local) and enforcing it throughout.
+
+- **No validation of incoming date strings** — `new Date('not-a-date')` returns `Invalid Date`, `getDay()` returns `NaN`, and `NaN === 0 || NaN === 6` is `false`, so a bad date silently skips the weekend bonus without any warning. A typo in the CSV (e.g. `2025-13-45`) goes unnoticed.
+
+- **Monetary amounts stored as JavaScript `number` (float64)** — every total, discount, tax, and shipping fee accumulates in IEEE-754 floats. The classic `0.1 + 0.2 !== 0.3` bug is latent throughout: on large batches, cents can drift and the displayed total may be a few cents off the sum of its components. The simple fix is a handful of helpers that convert to integer minor units (cents) for arithmetic, then back to decimal for display — no external dependency needed. Preserved to match the legacy.
+
+- **Customers without orders are invisible** — the report loops over customers *that have ordered*, so a row in `customers.csv` with no matching entry in `orders.csv` never appears in the output. This is the legacy behavior and may be intentional, but it should be confirmed with the business before trusting the report as an exhaustive customer list.
+
+- **Naive CSV splitting (no escaping)** — our `readCsv` splits rows on a literal `,`. A value that contains a comma (`"Smith, John"`) or an embedded newline would corrupt every column after it. Works today because the current data has none, but a single edit to a customer name could break the whole pipeline. A proper CSV library is the real fix.
+
+- **UTF-8 encoding hard-coded** — `fs.readFileSync(path, 'utf-8')` silently mangles any CSV exported in another encoding (Latin-1, Windows-1252, Excel French exports with accents…). There is no BOM detection, no configurable encoding, and no warning when a row contains replacement characters.
+
+- **Single `console.info(reportText)` for the text report** — keeps the legacy's behavior (the shell captures stdout). A proper CLI would distinguish stdout (payload) from stderr (logs).
+
+### Future improvement ideas
+
+- Replace the hand-rolled CSV reader with a standard library (`csv-parse`) — the one case where the RFC 4180 quoting / escaping / embedded-newline rules are complex enough that rolling a correct parser by hand is not worth it.
+- Drive `CURRENCY_RATES` from an external provider (API, cache, daily snapshots) with a historical table so past orders can be replayed with the rate of their own date. The `getCurrencyRate` wrapper is already in place so call sites will not change.
+- Introduce an explicit business timezone (for example `Europe/Paris`) and derive `getDay()` / `parseHour` from it using Node's built-in `Intl.DateTimeFormat` — a ~10-line helper (`new Intl.DateTimeFormat('en-US', { timeZone, weekday: 'short' })`) is enough, no external date library required.
+- Introduce a tiny money helper (`toCents(value) = Math.round(value * 100)` / `fromCents(cents) = cents / 100`) and run every accumulation in integer cents to kill float drift. Again, no external dependency needed for the current operations (addition, subtraction, multiplication by an integer).
+- Validate CSV date strings at parse time (format + reality check), fall back or throw on invalid dates instead of silently producing `NaN`.
+- Extend the `Currency` union (or make it dynamic from the rates provider) so a CSV containing a non-listed currency is either rejected up front or gracefully handled.
+- Extract `src/domain/` for richer business policies if the rules grow beyond pure calculation (validation, workflows, eligibility checks).
+- Migrate to ESM once the tooling (ts-node / Jest) stabilizes, to replace `require.main === module` with a cleaner entry detection.
+- Add a `--dry-run` flag on `pnpm start` to skip the `output.json` write (useful for CI checks and preview).
+- Add a coverage threshold to Jest (`--coverage --coverageThreshold=...`) once orchestration tests are in.
