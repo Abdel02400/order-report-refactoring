@@ -16,6 +16,7 @@ Types are split into **one file per business entity (or shared concept)** rather
 - [shippingZone.ts](shippingZone.ts) — `ShippingZone`, `SHIPPING_ZONE`, `SHIPPING_ZONE_CODES`, `ShippingZoneCode`
 - [promotion.ts](promotion.ts) — `Promotion`, `PromotionCode`, `toPromotionCode`, `PROMOTION_TYPE`, `PROMOTION_TYPES`, `PromotionType`
 - [currency.ts](currency.ts) — `CURRENCY`, `CURRENCIES`, `Currency`
+- [report.ts](report.ts) — `CustomerReportData`, `ReportData`, `CustomerJsonExport` (DTOs consumed by the report layer)
 
 ### Why one file per entity
 
