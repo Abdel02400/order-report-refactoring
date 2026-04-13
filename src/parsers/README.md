@@ -1,5 +1,7 @@
 # `src/parsers/`
 
+> French version available at [README.fr.md](README.fr.md).
+
 This folder holds the CSV parsers that turn raw data files into typed domain entities.
 
 ## Purpose

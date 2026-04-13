@@ -1,5 +1,7 @@
 # `src/types/`
 
+> French version available at [README.fr.md](README.fr.md).
+
 This folder holds the domain types used across the application.
 
 ## Purpose

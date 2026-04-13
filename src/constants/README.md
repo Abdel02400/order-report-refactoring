@@ -1,5 +1,7 @@
 # `src/constants/`
 
+> French version available at [README.fr.md](README.fr.md).
+
 This folder holds all business constants used across the application.
 
 ## Purpose
@@ -18,6 +20,9 @@ Constants are split into **one file per business domain** rather than grouped in
 - [currency.ts](currency.ts) — currency conversion rates (EUR / USD / GBP multipliers)
 - [product.ts](product.ts) — product defaults (default weight when missing in CSV)
 - [order.ts](order.ts) — order defaults (default time when missing in CSV)
+- [customer.ts](customer.ts) — customer defaults (fallback name when an order references an unknown customer)
+- [date.ts](date.ts) — date-related constants (`DAY_OF_WEEK` object + `DayOfWeek` type)
+- [report.ts](report.ts) — accumulator starting values for the report builder (named zeros: `NO_GRAND_TOTAL`, `NO_TAX_COLLECTED`, `NO_SUBTOTAL`, `NO_WEIGHT`)
 
 ### Why one file per domain
 

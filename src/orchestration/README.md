@@ -1,5 +1,7 @@
 # `src/orchestration/`
 
+> French version available at [README.fr.md](README.fr.md).
+
 This folder holds the glue between the pure calculator layer, the parsers, and the output layer. It wires data sources to business rules, builds the DTOs consumed by the report layer, and isolates the final I/O step.
 
 ## Purpose

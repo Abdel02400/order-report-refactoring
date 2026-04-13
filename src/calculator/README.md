@@ -1,5 +1,7 @@
 # `src/calculator/`
 
+> French version available at [README.fr.md](README.fr.md).
+
 This folder holds the pure business logic of the application — all the rules that transform typed entities into the numbers and decisions the final report is built on.
 
 ## Purpose

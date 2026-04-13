@@ -1,5 +1,7 @@
 # `src/utils/`
 
+> French version available at [README.fr.md](README.fr.md).
+
 This folder holds small, focused helpers that are not tied to a single business domain.
 
 ## Purpose

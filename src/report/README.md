@@ -1,5 +1,7 @@
 # `src/report/`
 
+> French version available at [README.fr.md](README.fr.md).
+
 This folder holds the output layer of the application: turning computed results into the final text report and JSON export.
 
 ## Purpose
