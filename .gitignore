@@ -1,1 +1,3 @@
 node_modules
+legacy/expected/
+legacy/output.json

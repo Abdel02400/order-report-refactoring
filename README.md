@@ -11,24 +11,24 @@
 
 ## Installation
 
-### Prérequis
-- Node.js version 20.x ou supérieure
-- pnpm version 8.x ou supérieure
+### Requirements
+- Node.js version 20.x or higher
+- pnpm version 8.x or higher
 
-### Commandes
+### Commands
 ```bash
-# Installer les dépendances
+# Install dependencies
 pnpm install
 
-# Lancer le script legacy
+# Run the legacy script
 pnpm legacy
 
-# Lancer les tests
+# Run the tests
 pnpm test
 
-# Linter le code
+# Lint the code
 pnpm lint
 
-# Formater le code
+# Format the code
 pnpm format
 ```
