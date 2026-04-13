@@ -4,6 +4,8 @@ import type { PromotionCode } from '@/types/promotion';
 
 export type OrderId = string & { readonly __brand: 'OrderId' };
 
+export const toOrderId = (value: string): OrderId => value as OrderId;
+
 export interface Order {
     id: OrderId;
     customerId: CustomerId;

@@ -10,12 +10,12 @@ Centralize every business entity shape behind explicit, reusable TypeScript type
 
 Types are split into **one file per business entity (or shared concept)** rather than grouped in a single `types.ts`:
 
-- [customer.ts](customer.ts) — `Customer`, `CustomerId`, `CustomerLevel`
-- [order.ts](order.ts) — `Order`, `OrderId`
-- [product.ts](product.ts) — `Product`, `ProductId`
-- [shippingZone.ts](shippingZone.ts) — `ShippingZone`, `ShippingZoneCode`, `SHIPPING_ZONE`
-- [promotion.ts](promotion.ts) — `Promotion`, `PromotionCode`, `PromotionType`
-- [currency.ts](currency.ts) — `Currency` (shared across customers and pricing)
+- [customer.ts](customer.ts) — `Customer`, `CustomerId`, `toCustomerId`, `CUSTOMER_LEVEL`, `CUSTOMER_LEVELS`, `CustomerLevel`
+- [order.ts](order.ts) — `Order`, `OrderId`, `toOrderId`
+- [product.ts](product.ts) — `Product`, `ProductId`, `toProductId`
+- [shippingZone.ts](shippingZone.ts) — `ShippingZone`, `SHIPPING_ZONE`, `SHIPPING_ZONE_CODES`, `ShippingZoneCode`
+- [promotion.ts](promotion.ts) — `Promotion`, `PromotionCode`, `toPromotionCode`, `PROMOTION_TYPE`, `PROMOTION_TYPES`, `PromotionType`
+- [currency.ts](currency.ts) — `CURRENCY`, `CURRENCIES`, `Currency`
 
 ### Why one file per entity
 
@@ -34,23 +34,34 @@ export type CustomerId = string & { readonly __brand: 'CustomerId' };
 
 At runtime these are still strings, but TypeScript treats them as distinct types. Passing a `ProductId` where a `CustomerId` is expected becomes a compile-time error, which prevents a whole class of silent ID-mixup bugs. Cross-entity references in interfaces (for example `Order.customerId: CustomerId`) also make relationships explicit at the type level.
 
-## Closed-world unions
+### Factory functions
 
-When an entity has a **finite, business-defined set of valid values**, the value list itself becomes part of the type. The pattern uses a `const` object combined with `typeof` + `keyof` to derive the union automatically:
+To avoid scattering `as CustomerId`-style casts across the codebase, each branded type ships a small factory function that performs the cast in a single auditable place:
 
 ```ts
-export const SHIPPING_ZONE = {
-    ZONE_1: 'ZONE1',
-    ZONE_2: 'ZONE2',
-    ZONE_3: 'ZONE3',
-    ZONE_4: 'ZONE4',
-} as const;
-
-export type ShippingZoneCode = (typeof SHIPPING_ZONE)[keyof typeof SHIPPING_ZONE];
+export const toCustomerId = (value: string): CustomerId => value as CustomerId;
 ```
 
-This gives the best of both worlds: a runtime object that can be iterated or referenced (`SHIPPING_ZONE.ZONE_3`), and a strict literal union at compile time (`'ZONE1' | 'ZONE2' | 'ZONE3' | 'ZONE4'`). The same approach applies to other closed enumerations such as `Currency`, `CustomerLevel`, and `PromotionType` whenever the value list is owned by the business and not by external data.
+Parsers and any other boundary code call `toCustomerId(row.id)` instead of casting. When runtime validation is needed later (format, length, existence checks), the change happens inside the factory and every call site benefits immediately.
+
+## Closed-world unions
+
+When an entity has a **finite, business-defined set of valid values**, the value list itself becomes part of the type. The pattern uses a `const` object combined with `typeof` + `keyof` to derive the union automatically, and a paired `VALUES` array gives a runtime list for validators like `parseEnum`:
+
+```ts
+export const CURRENCY = {
+    EUR: 'EUR',
+    USD: 'USD',
+    GBP: 'GBP',
+} as const;
+
+export type Currency = (typeof CURRENCY)[keyof typeof CURRENCY];
+
+export const CURRENCIES = Object.values(CURRENCY) as readonly Currency[];
+```
+
+This gives three things in one place: a runtime namespace (`CURRENCY.EUR`), a strict literal union (`'EUR' | 'USD' | 'GBP'`), and an iterable list (`CURRENCIES`) ready to plug into runtime validators. The same approach is used for `CUSTOMER_LEVEL`, `PROMOTION_TYPE`, and `SHIPPING_ZONE`.
 
 ## Personal convention
 
-This layout reflects how I structure types on production projects — explicit file names per entity, one responsibility per file, branded IDs for cross-entity references, closed-world unions for fixed value sets, imported through a path alias (`@/types/...`). The goal is to write code today the same way I would on a codebase that has to live for years.
+This layout reflects how I structure types on production projects — explicit file names per entity, one responsibility per file, branded IDs with factory functions for cross-entity references, closed-world unions for fixed value sets, imported through a path alias (`@/types/...`). The goal is to write code today the same way I would on a codebase that has to live for years.

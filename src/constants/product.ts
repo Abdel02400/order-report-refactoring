@@ -1,0 +1,1 @@
+export const DEFAULT_PRODUCT_WEIGHT = 1.0;

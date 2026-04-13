@@ -14,6 +14,7 @@ export default defineConfig([
             'no-unused-vars': 'off',
             '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
             'prefer-destructuring': ['error', { AssignmentExpression: { array: false } }],
+            '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
         },
     },
 ]);

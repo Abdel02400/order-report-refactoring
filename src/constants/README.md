@@ -16,6 +16,8 @@ Constants are split into **one file per business domain** rather than grouped in
 - [loyalty.ts](loyalty.ts) — loyalty program parameters (point ratio, premium threshold)
 - [promotions.ts](promotions.ts) — promotional rules (morning bonus hour and rate)
 - [currency.ts](currency.ts) — currency conversion rates (EUR / USD / GBP multipliers)
+- [product.ts](product.ts) — product defaults (default weight when missing in CSV)
+- [order.ts](order.ts) — order defaults (default time when missing in CSV)
 
 ### Why one file per domain
 
