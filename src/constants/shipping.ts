@@ -4,6 +4,8 @@ export const SHIPPING_LIMIT = 50;
 export const SHIP = 5.0;
 export const HANDLING_FEE = 2.5;
 
+export const NO_SHIPPING = 0;
+
 export const HEAVY_WEIGHT_THRESHOLD = 10;
 export const MEDIUM_WEIGHT_THRESHOLD = 5;
 export const MEDIUM_WEIGHT_RATE = 0.3;
@@ -17,5 +19,10 @@ export const DEFAULT_ZONE_PER_KG = 0.5;
 export const FREE_SHIPPING_HEAVY_THRESHOLD = 20;
 export const FREE_SHIPPING_HEAVY_RATE = 0.25;
 
+export const NO_HANDLING = 0;
+
 export const HANDLING_ITEM_TIER_1 = 10;
 export const HANDLING_ITEM_TIER_2 = 20;
+
+/** Multiplier applied to HANDLING_FEE when an order exceeds the tier 2 item count (very large orders pay double). */
+export const HANDLING_TIER_2_MULTIPLIER = 2;

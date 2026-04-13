@@ -18,7 +18,7 @@ Helpers are grouped by **technical concern**, with one file per concern:
 
 - **Scales with the project.** As more helpers emerge (date, string, async…), each gets its own file instead of piling up in a single `utils.ts`.
 - **Explicit file names act as documentation.** Reading `import { parseEnum } from '@/utils/parse'` immediately tells you the category of helper without opening the file.
-- **Clear boundary.** A function only belongs here if it stays useful without knowing about `Customer`, `Order`, `Product`, etc. Anything tied to a business entity belongs in `@/domain/` or near its owner, not here.
+- **Clear boundary.** A function only belongs here if it stays useful without knowing about `Customer`, `Order`, `Product`, etc. Anything tied to a business entity belongs in `@/calculator/` or near its owner, not here.
 
 ## Design notes
 

@@ -17,4 +17,13 @@ export default defineConfig([
             '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
         },
     },
+    {
+        files: ['*.config.js', '*.config.cjs'],
+        languageOptions: {
+            globals: { require: 'readonly', module: 'readonly', __dirname: 'readonly' },
+        },
+        rules: {
+            '@typescript-eslint/no-require-imports': 'off',
+        },
+    },
 ]);
