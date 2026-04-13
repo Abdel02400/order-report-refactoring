@@ -14,15 +14,11 @@ import {
     NO_SHIPPING,
 } from '@/constants/shipping';
 
-function computePaidShipping(
-    weight: number,
-    zone: ShippingZoneCode,
-    shippingZones: ShippingZonesMap,
-): number {
+function computePaidShipping(weight: number, zone: ShippingZoneCode, shippingZones: ShippingZonesMap): number {
     const defaultShipZone: ShippingZone = {
         zone,
         base: DEFAULT_ZONE_BASE,
-        perKg: DEFAULT_ZONE_PER_KG
+        perKg: DEFAULT_ZONE_PER_KG,
     };
     const shipZone = shippingZones[zone] ?? defaultShipZone;
     const baseShip = shipZone.base;
@@ -44,12 +40,7 @@ function computePaidShipping(
     return ship;
 }
 
-export function computeShipping(
-    subtotal: number,
-    weight: number,
-    zone: ShippingZoneCode,
-    shippingZones: ShippingZonesMap,
-): number {
+export function computeShipping(subtotal: number, weight: number, zone: ShippingZoneCode, shippingZones: ShippingZonesMap): number {
     switch (true) {
         case subtotal < SHIPPING_LIMIT:
             return computePaidShipping(weight, zone, shippingZones);

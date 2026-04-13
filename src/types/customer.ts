@@ -7,7 +7,7 @@ export const toCustomerId = (value: string): CustomerId => value as CustomerId;
 
 export const CUSTOMER_LEVEL = {
     BASIC: 'BASIC',
-    PREMIUM: 'PREMIUM'
+    PREMIUM: 'PREMIUM',
 } as const;
 
 export type CustomerLevel = (typeof CUSTOMER_LEVEL)[keyof typeof CUSTOMER_LEVEL];

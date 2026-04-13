@@ -1,5 +1,5 @@
 import type { Currency } from '@/types/currency';
-import { CURRENCY_RATES } from '@/constants/currency';
+import { CURRENCY_RATES, DEFAULT_CURRENCY_RATE } from '@/constants/currency';
 
 /**
  * Returns the conversion rate for a given currency.
@@ -12,4 +12,4 @@ import { CURRENCY_RATES } from '@/constants/currency';
  * site. Keeping the abstraction here is cheaper than reintroducing it
  * everywhere once the requirement changes.
  */
-export const getCurrencyRate = (currency: Currency): number => CURRENCY_RATES[currency];
+export const getCurrencyRate = (currency: Currency): number => CURRENCY_RATES[currency] ?? DEFAULT_CURRENCY_RATE;

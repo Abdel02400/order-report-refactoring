@@ -1,23 +1,12 @@
-import {
-    PROMOTION_TYPE,
-    type Promotion,
-    type PromotionCode,
-} from '@/types/promotion';
-import {
-    NO_DISCOUNT_RATE,
-    NO_FIXED_DISCOUNT,
-    PERCENT_BASE,
-} from '@/constants/promotions';
+import { PROMOTION_TYPE, type Promotion, type PromotionCode } from '@/types/promotion';
+import { NO_DISCOUNT_RATE, NO_FIXED_DISCOUNT, PERCENT_BASE } from '@/constants/promotions';
 
 export interface ResolvedPromotion {
     discountRate: number;
     fixedDiscount: number;
 }
 
-export function resolvePromotion(
-    code: PromotionCode | '',
-    promotions: Record<PromotionCode, Promotion>,
-): ResolvedPromotion {
+export function resolvePromotion(code: PromotionCode | '', promotions: Record<PromotionCode, Promotion>): ResolvedPromotion {
     let discountRate = NO_DISCOUNT_RATE;
     let fixedDiscount = NO_FIXED_DISCOUNT;
 

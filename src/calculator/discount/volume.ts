@@ -14,11 +14,7 @@ import {
 } from '@/constants/discounts';
 import { DAY_OF_WEEK, type DayOfWeek } from '@/constants/date';
 
-export function computeVolumeDiscount(
-    subtotal: number,
-    level: CustomerLevel,
-    firstOrderDate: string,
-): number {
+export function computeVolumeDiscount(subtotal: number, level: CustomerLevel, firstOrderDate: string): number {
     let disc: number;
 
     switch (true) {

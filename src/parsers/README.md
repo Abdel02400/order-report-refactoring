@@ -20,7 +20,7 @@ Parsers are split into **one file per entity**, plus a shared low-level helper:
 ### Why one file per entity
 
 - **Scales with the project.** On a real application, each entity's parser evolves its own validation, defaults, and edge cases over time. A single parser file would become a dumping ground; per-entity files stay small and focused.
-- **Explicit file names act as documentation.** Reading `import { parseCustomers } from '@/parsers/customer'` immediately tells you *which entity* is being parsed and *where* its parsing rules live — no need to open the file to find out.
+- **Explicit file names act as documentation.** Reading `import { parseCustomers } from '@/parsers/customer'` immediately tells you _which entity_ is being parsed and _where_ its parsing rules live — no need to open the file to find out.
 - **Clear ownership and change scope.** A change to how customers are parsed only touches `customer.ts`. Diffs, code review, and git blame all stay meaningful.
 - **Easier to evolve.** When an entity needs richer parsing (validation, schema checks, versioning), the file is already there to host it.
 

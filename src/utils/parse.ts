@@ -19,11 +19,7 @@
  * const currency = parseEnum(row.currency, CURRENCIES, 'EUR');
  * // currency is typed as Currency, never just `string`.
  */
-export const parseEnum = <T extends string>(
-    value: string,
-    allowed: readonly T[],
-    fallback: T,
-): T => (allowed.includes(value as T) ? (value as T) : fallback);
+export const parseEnum = <T extends string>(value: string, allowed: readonly T[], fallback: T): T => (allowed.includes(value as T) ? (value as T) : fallback);
 
 /**
  * Parses a raw string value into a boolean using the conventional

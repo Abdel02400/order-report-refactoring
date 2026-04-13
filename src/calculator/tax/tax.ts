@@ -3,11 +3,7 @@ import type { Product, ProductId } from '@/types/product';
 import { NO_TAX, TAX } from '@/constants/tax';
 import { round2 } from '@/utils/number';
 
-export function computeTax(
-    items: Order[],
-    products: Record<ProductId, Product>,
-    taxableAmount: number,
-): number {
+export function computeTax(items: Order[], products: Record<ProductId, Product>, taxableAmount: number): number {
     let allTaxable = true;
 
     for (const item of items) {

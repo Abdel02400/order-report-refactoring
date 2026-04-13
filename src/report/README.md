@@ -4,7 +4,7 @@ This folder holds the output layer of the application: turning computed results 
 
 ## Purpose
 
-Isolate every concern about *how the result is presented* from every concern about *how the result is produced*. Calculators give back numbers, the orchestrator assembles them into DTOs, and this folder shapes those DTOs into strings and export records. No math happens here.
+Isolate every concern about _how the result is presented_ from every concern about _how the result is produced_. Calculators give back numbers, the orchestrator assembles them into DTOs, and this folder shapes those DTOs into strings and export records. No math happens here.
 
 ## File organization
 
@@ -26,7 +26,7 @@ The report-layer DTOs (`CustomerReportData`, `ReportData`, `CustomerJsonExport`)
 - **No calculation.** All monetary values arrive already expressed in the customer's target currency (tax and total have already been multiplied by the currency rate upstream). The formatter does nothing but `toFixed(2)` and string assembly.
 - **Preserve the legacy output byte-for-byte.** Every quirk of the original script is reproduced on purpose: the `2`-decimal display for money, the `1`-decimal display for weight, the conditional `Morning bonus` and `Handling` lines, the `Loyalty Points` shown as an integer, the blank line between customers, the `Grand Total` and `Total Tax Collected` labelled in EUR even though per-customer totals may be in other currencies. Fixing these belongs to a later iteration, after the golden master locks the current behavior.
 - **Snake_case JSON keys on purpose.** `customer_id`, `loyalty_points` match the legacy `output.json` schema. Renaming them would break downstream consumers that depend on this file.
-- **Typed DTOs at the boundary.** The report layer accepts `CustomerReportData` / `ReportData` rather than raw `Customer`/`Order`/`Product` entities. That separation lets the orchestrator decide *what* to expose to the output layer — the formatter never has to know how prices or discounts were computed.
+- **Typed DTOs at the boundary.** The report layer accepts `CustomerReportData` / `ReportData` rather than raw `Customer`/`Order`/`Product` entities. That separation lets the orchestrator decide _what_ to expose to the output layer — the formatter never has to know how prices or discounts were computed.
 
 ## Personal convention
 

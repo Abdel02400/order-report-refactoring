@@ -4,7 +4,7 @@ export const toPromotionCode = (value: string): PromotionCode => value as Promot
 
 export const PROMOTION_TYPE = {
     PERCENTAGE: 'PERCENTAGE',
-    FIXED: 'FIXED'
+    FIXED: 'FIXED',
 } as const;
 
 export type PromotionType = (typeof PROMOTION_TYPE)[keyof typeof PROMOTION_TYPE];

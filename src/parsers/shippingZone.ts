@@ -1,12 +1,7 @@
 import { readCsv, type CsvRow } from '@/parsers/csv';
 import { CSV_FILE } from '@constants/csv';
 import { parseEnum } from '@/utils/parse';
-import {
-    SHIPPING_ZONE,
-    SHIPPING_ZONE_CODES,
-    type ShippingZone,
-    type ShippingZoneCode,
-} from '@/types/shippingZone';
+import { SHIPPING_ZONE, SHIPPING_ZONE_CODES, type ShippingZone, type ShippingZoneCode } from '@/types/shippingZone';
 import { DEFAULT_ZONE_PER_KG } from '@/constants/shipping';
 
 interface ShippingZoneCsvRow extends CsvRow {

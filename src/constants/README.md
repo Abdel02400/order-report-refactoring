@@ -22,7 +22,7 @@ Constants are split into **one file per business domain** rather than grouped in
 ### Why one file per domain
 
 - **Scales with the project.** On a real application, each domain grows its own set of constants over time. A single file would become a dumping ground; domain files stay small and focused.
-- **Explicit file names act as documentation.** Reading `import { TAX } from '@/constants/tax'` immediately tells you *where* that value comes from and *which domain* owns it — no need to open the file to find out.
+- **Explicit file names act as documentation.** Reading `import { TAX } from '@/constants/tax'` immediately tells you _where_ that value comes from and _which domain_ owns it — no need to open the file to find out.
 - **Clear ownership and change scope.** A change to shipping rules only touches `shipping.ts`. Diffs, code review, and git blame all stay meaningful.
 - **Easier to evolve.** When a domain needs richer types (enums, lookup tables, derived values), the file is already there to host them.
 

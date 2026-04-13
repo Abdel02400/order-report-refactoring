@@ -14,16 +14,16 @@ Logic is grouped by **business sub-domain**, each in its own folder. Within a fo
 
 - [currency/currency.ts](currency/currency.ts) — `getCurrencyRate`
 - [pricing/](pricing/) — line-level pricing
-  - [promotion.ts](pricing/promotion.ts) — `resolvePromotion` (PERCENTAGE vs FIXED, active check, early returns)
-  - [lineTotal.ts](pricing/lineTotal.ts) — `computeLineTotal` (base price, promo application, morning bonus)
+    - [promotion.ts](pricing/promotion.ts) — `resolvePromotion` (PERCENTAGE vs FIXED, active check, early returns)
+    - [lineTotal.ts](pricing/lineTotal.ts) — `computeLineTotal` (base price, promo application, morning bonus)
 - [discount/](discount/) — customer-level discounts
-  - [volume.ts](discount/volume.ts) — `computeVolumeDiscount` (tier-based via `switch (true)`, weekend bonus)
-  - [loyalty.ts](discount/loyalty.ts) — `computeLoyaltyPoints`, `computeLoyaltyDiscount`
-  - [cap.ts](discount/cap.ts) — `capDiscount` (global MAX_DISCOUNT cap, proportional reduction)
+    - [volume.ts](discount/volume.ts) — `computeVolumeDiscount` (tier-based via `switch (true)`, weekend bonus)
+    - [loyalty.ts](discount/loyalty.ts) — `computeLoyaltyPoints`, `computeLoyaltyDiscount`
+    - [cap.ts](discount/cap.ts) — `capDiscount` (global MAX_DISCOUNT cap, proportional reduction)
 - [tax/tax.ts](tax/tax.ts) — `computeTax` (global vs per-item taxable logic)
 - [shipping/](shipping/) — shipping cost and handling fees
-  - [shipping.ts](shipping/shipping.ts) — `computeShipping` (`switch (true)` dispatch; internal `computePaidShipping` helper handles weight tiers and remote zones)
-  - [handling.ts](shipping/handling.ts) — `computeHandling` (tiered via `switch (true)`)
+    - [shipping.ts](shipping/shipping.ts) — `computeShipping` (`switch (true)` dispatch; internal `computePaidShipping` helper handles weight tiers and remote zones)
+    - [handling.ts](shipping/handling.ts) — `computeHandling` (tiered via `switch (true)`)
 
 ### Why sub-folders per sub-domain
 

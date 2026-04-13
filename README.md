@@ -12,10 +12,12 @@
 ## Installation
 
 ### Requirements
+
 - Node.js version 20.x or higher
 - pnpm version 8.x or higher
 
 ### Commands
+
 ```bash
 # Install dependencies
 pnpm install

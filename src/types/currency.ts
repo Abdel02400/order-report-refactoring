@@ -1,7 +1,7 @@
 export const CURRENCY = {
     EUR: 'EUR',
     USD: 'USD',
-    GBP: 'GBP'
+    GBP: 'GBP',
 } as const;
 
 export type Currency = (typeof CURRENCY)[keyof typeof CURRENCY];

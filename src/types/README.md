@@ -21,7 +21,7 @@ Types are split into **one file per business entity (or shared concept)** rather
 ### Why one file per entity
 
 - **Scales with the project.** On a real application, each entity grows its own set of related types (DTOs, enums, narrow variants) over time. A single file would become a dumping ground; entity files stay small and focused.
-- **Explicit file names act as documentation.** Reading `import { Customer } from '@/types/customer'` immediately tells you *which entity* is involved and *where* its contract lives — no need to open the file to find out.
+- **Explicit file names act as documentation.** Reading `import { Customer } from '@/types/customer'` immediately tells you _which entity_ is involved and _where_ its contract lives — no need to open the file to find out.
 - **Clear ownership and change scope.** A change to the customer contract only touches `customer.ts`. Diffs, code review, and git blame all stay meaningful.
 - **Easier to evolve.** When an entity needs richer variants (input DTOs, response shapes, derived types), the file is already there to host them.
 

@@ -15,7 +15,7 @@ export const readCsv = <T extends CsvRow = CsvRow>(fileKey: CsvFileKey): T[] => 
     // result in both cases; we prefer an explicit error so missing data is never ignored.
     if (lines.length <= 1) throw new Error(`CSV file is empty: "${fileKey}" (${filePath})`);
 
-    const headers = lines[0].split(',');
+    const headers = lines[0].trim().split(',');
     const rows: T[] = [];
 
     for (let i = 1; i < lines.length; i++) {

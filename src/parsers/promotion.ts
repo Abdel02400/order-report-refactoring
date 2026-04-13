@@ -2,13 +2,7 @@ import { readCsv, type CsvRow } from '@/parsers/csv';
 import { CSV_FILE } from '@constants/csv';
 import { csvFileExists } from '@/utils/csv';
 import { parseBool, parseEnum } from '@/utils/parse';
-import {
-    PROMOTION_TYPE,
-    PROMOTION_TYPES,
-    toPromotionCode,
-    type Promotion,
-    type PromotionCode,
-} from '@/types/promotion';
+import { PROMOTION_TYPE, PROMOTION_TYPES, toPromotionCode, type Promotion, type PromotionCode } from '@/types/promotion';
 
 interface PromotionCsvRow extends CsvRow {
     code: string;
